@@ -1,0 +1,146 @@
+{
+  parserClass="com.jakmobius.bonk.BonkParser"
+  parserUtilClass="com.jakmobius.bonk.grammar.BonkParserUtil"
+
+  extends="com.intellij.extapi.psi.ASTWrapperPsiElement"
+
+  psiClassPrefix="Bonk"
+  psiImplClassSuffix="Impl"
+  psiPackage="com.jakmobius.bonk.psi"
+  psiImplUtilClass="com.jakmobius.bonk.psi.BonkPsiImplUtil"
+  psiImplPackage="com.jakmobius.bonk.psi.impl"
+
+  elementTypeHolderClass="com.jakmobius.bonk.psi.BonkTypes"
+  elementTypeClass="com.jakmobius.bonk.psi.BonkElementType"
+  tokenTypeClass="com.jakmobius.bonk.psi.BonkTokenType"
+
+   tokens=[
+        buul_keyword="buul"
+        shrt_keyword="shrt"
+        nubr_keyword="nubr"
+        long_keyword="long"
+        flot_keyword="flot"
+        dabl_keyword="dabl"
+        strg_keyword="strg"
+        many_keyword="many"
+        nothing_keyword="nothing"
+        null_keyword="null"
+        blok_operator="blok"
+        help_operator="help"
+        brek_operator="brek"
+        hive_operator="hive"
+        bowl_operator="bowl"
+        bonk_operator="bonk"
+        loop_operator="loop"
+        of_operator="of"
+        and_operator="and"
+        or_operator="or"
+        not_operator="not"
+
+        less_eq="<="
+        greater_eq=">="
+        plus_assign="+="
+        minus_assign="-="
+        mul_assign="*="
+        div_assign="/="
+        equals="=="
+        assign="="
+        not_equals="!="
+        less="<"
+        greater=">"
+        plus="+"
+        minus="-"
+        mul="*"
+        div="/"
+        comma=","
+        semicolon=";"
+        colon=":"
+        left_bracket="["
+        right_bracket="]"
+        left_paren="("
+        right_paren=")"
+        left_curly="{"
+        right_curly="}"
+
+        call_operator="@"
+
+        id='regexp:\p{Alpha}\w*'
+        string="regexp:(\"([^\"\\]|\\.)*\")"
+        number='regexp:(\d+(\.\d*)?)|(\.\d+)(([Ee])([+-])?\d+)?'
+        line_comment='regexp:dogo:.*'
+        block_comment="regexp:-dogo->(.|\n)*<-dogo-"
+        space='regexp:[ \t]+'
+        newline='regexp:\n|(\r\n)'
+   ]
+
+   extends(".*Expression")=Expression
+   extends(".*Statement")=Statement
+}
+
+root ::= Program
+Program ::= HelpStatement* Declaration*
+HelpStatement ::= "help" ExpressionString
+Declaration ::= BlokDeclaration | VariableDeclaration ";" | HiveDeclaration {
+    methods = [getName setName getIdentifier]
+}
+BlokDeclaration ::= "blok" Identifier ParameterListDeclaration? BlokReturnType? (CodeBlock | ";")
+BlokReturnType ::= ":" Type
+VariableDeclaration ::= "bowl" Identifier (":" Type)? ("=" Expression)?
+ParameterListDeclaration ::= "[" (VariableDeclaration ("," VariableDeclaration)*)? "]"
+CodeBlock ::= "{" (LoopStatement | WrapperStatement)* "}";
+WrapperStatement ::= SemicolonStatement | ";"
+SemicolonStatement ::= Statement ";" {
+    pin=1
+}
+Statement ::= Expression | BonkStatement | BrekStatement | VariableDeclaration {
+    recoverWhile="statementRecovery"
+}
+BonkStatement ::= "bonk" Expression?
+BrekStatement ::= "brek"
+ArrayConstant ::= "[" (Expression)* "]"
+HiveAccess ::= Identifier "of" PrimaryExpression
+ParameterList ::= "[" (ParameterListItem ("," ParameterListItem)*)? "]"
+ParameterListItem ::= Identifier "=" Expression {
+    pin=1
+    recoverWhile="parameterListItemRecovery"
+}
+LoopStatement ::= "loop" ParameterListDeclaration? CodeBlock
+Type ::= "many" Type | TrivialType | Identifier
+HiveDeclaration ::= "hive" Identifier HiveBody
+HiveBody ::= "{" (BlokDeclaration | VariableDeclaration ";")* "}"
+TrivialType ::= "buul" | "shrt" | "nubr" | "long" | "flot" | "dabl" | "strg" | "nothing" | "null"
+
+Expression ::= AssignExpression
+
+AssignExpression ::= OrExpression (AssignmentOperator OrExpression) * {
+    pin=1
+    collapse="true"
+}
+OrExpression ::= AndExpression ("or" AndExpression) *
+AndExpression ::= EqualsExpression ("and" EqualsExpression) *
+EqualsExpression ::= CompareExpression (EqComparisonOperator CompareExpression) *
+CompareExpression ::= PlusMinusExpression (ComparisonOperator PlusMinusExpression) *
+PlusMinusExpression ::= MulDivExpression (PlusMinus MulDivExpression) *
+MulDivExpression ::= PrimaryExpression (MulDiv PrimaryExpression) *
+
+ExpressionUnary ::= UnaryOperator Expression
+PrimaryExpression ::= HiveAccess | Identifier | number | ExpressionString | ArrayConstant | "(" Expression ")" | CodeBlock | "null" | ExpressionCall | ExpressionUnary
+ExpressionCall ::= "@" Expression ParameterList?
+
+Identifier ::= id {
+    mixin="com.jakmobius.bonk.psi.impl.BonkNamedElementImpl"
+    implements="com.jakmobius.bonk.psi.BonkNamedElement"
+    methods = [getName setName]
+}
+ExpressionString ::= string { methods = [getValue] }
+
+UnaryOperator ::= "not" | PlusMinus
+
+AssignmentOperator ::= "=" | "+=" | "-=" | "*=" | "/="
+left EqComparisonOperator ::= "==" | "!="
+left ComparisonOperator ::= "<" | ">" | "<=" | ">="
+left PlusMinus          ::= "+" | "-"
+left MulDiv             ::= "*" | "/"
+
+private statementRecovery ::= !(";" | "{" | "}" | "(" | ")" | "bonk" | "blok" | "loop" | "hive" | "brek")
+private parameterListItemRecovery ::= !(","|"]")

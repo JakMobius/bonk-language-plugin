@@ -1,18 +1,47 @@
 <!-- Plugin Configuration File. Read more: https://plugins.jetbrains.com/docs/intellij/plugin-configuration-file.html -->
 <idea-plugin>
     <id>com.github.jakmobius.bonklanguageplugin</id>
-    <name>bonk-language-plugin Template</name>
+    <name>Bonk Language Support</name>
     <vendor>jakmobius</vendor>
 
     <depends>com.intellij.modules.platform</depends>
+    <depends>com.intellij.java</depends>
 
     <resource-bundle>messages.MyBundle</resource-bundle>
 
-    <extensions defaultExtensionNs="com.intellij">
-        <toolWindow factoryClass="com.github.jakmobius.bonklanguageplugin.toolWindow.MyToolWindowFactory" id="MyToolWindow"/>
-    </extensions>
-
     <applicationListeners>
-        <listener class="com.github.jakmobius.bonklanguageplugin.listeners.MyFrameStateListener" topic="com.intellij.ide.FrameStateListener"/>
+        <listener class="com.jakmobius.bonk.listeners.MyFrameStateListener"
+                  topic="com.intellij.ide.FrameStateListener"/>
     </applicationListeners>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <toolWindow factoryClass="com.jakmobius.bonk.toolWindow.MyToolWindowFactory" id="MyToolWindow"/>
+        <fileType
+                name="Bonk file"
+                implementationClass="com.jakmobius.bonk.BonkFileType"
+                fieldName="INSTANCE"
+                language="Bonk"
+                extensions="bs"/>
+        <lang.parserDefinition
+                language="Bonk"
+                implementationClass="com.jakmobius.bonk.psi.BonkParserDefinition"/>
+        <lang.syntaxHighlighterFactory
+                language="Bonk"
+                implementationClass="com.jakmobius.bonk.highlight.BonkSyntaxHighlighterFactory"/>
+        <psi.referenceContributor language="Bonk"
+                                  implementation="com.jakmobius.bonk.BonkReferenceContributor"/>
+        <lang.refactoringSupport
+                language="Bonk"
+                implementationClass="com.jakmobius.bonk.BonkRefactoringSupportProvider"/>
+
+        <completion.contributor language="Bonk"
+                                implementationClass="com.jakmobius.bonk.complete.BonkFilenameCompletionContributor"/>
+
+        <langCodeStyleSettingsProvider implementation="com.jakmobius.bonk.style.BonkLanguageCodeStyleSettingsProvider"/>
+        <codeStyleSettingsProvider implementation="com.jakmobius.bonk.style.BonkCodeStyleSettingsProvider"/>
+        <lang.formatter language="Bonk" implementationClass="com.jakmobius.bonk.formatting.BonkFormattingModelBuilder"/>
+        <lang.braceMatcher language="Bonk" implementationClass="com.jakmobius.bonk.brace.BonkBraceMatcher"/>
+        <lang.commenter language="Bonk" implementationClass="com.jakmobius.bonk.BonkCommenter"/>
+        <typedHandler implementation="com.jakmobius.bonk.BonkTypedHandlerDelegate"/>
+    </extensions>
 </idea-plugin>

@@ -122,3 +122,9 @@ tasks {
         channels.set(properties("pluginVersion").map { listOf(it.split('-').getOrElse(1) { "default" }.split('.').first()) })
     }
 }
+
+sourceSets["main"].java.srcDirs("src/main/gen")
+
+intellij {
+    plugins.set(listOf("com.intellij.java"))
+}
